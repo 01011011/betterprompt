@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Transform your rough prompts into well-structured, effective ones using AI">
+    <meta name="author" content="BetterPrompt">
+    <title>BetterPrompt - AI Prompt Optimizer</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="{{ url_for('static', filename='js/app.js') }}" as="script">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BetterPrompt</h1>
+            <p class="subtitle">Transform your rough prompts into well-structured, effective ones</p>
+        </header>
+          <main>
+            <section class="form-section">
+                <form id="promptForm" novalidate>
+                    <div class="form-group">
+                        <label for="prompt">Enter your rough prompt:</label>
+                        <textarea 
+                            id="prompt" 
+                            name="prompt" 
+                            placeholder="Example: write me something about dogs"
+                            required
+                            aria-describedby="prompt-help"
+                            autocomplete="off"
+                            spellcheck="true"
+                        ></textarea>
+                        <small id="prompt-help" style="color: #7f8c8d; font-size: 0.9rem;">
+                            Tip: Use Ctrl+Enter to quickly submit your prompt
+                        </small>
+                    </div>
+                    
+                    <button type="submit" id="submitBtn" class="btn btn-primary">
+                        Generate Better Prompt
+                    </button>
+                </form>
+            </section>
+            
+            <section class="results-section">
+                <div class="result" id="result" role="region" aria-live="polite">
+                    <div class="result-header">
+                        <h2 class="result-title">Improved Prompt:</h2>
+                        <div class="result-actions">
+                            <button 
+                                id="copyBtn" 
+                                class="btn btn-small btn-success"
+                                type="button"
+                                aria-label="Copy improved prompt to clipboard"
+                            >
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div 
+                        id="resultText" 
+                        class="result-text"
+                        role="textbox"
+                        aria-readonly="true"
+                        aria-label="Improved prompt text"
+                    ></div>
+                </div>
+                
+                <div class="error" id="error" role="alert" aria-live="assertive"></div>
+            </section>
+        </main>
+        
+        <footer style="margin-top: 40px; text-align: center; color: #7f8c8d; font-size: 0.9rem;">
+            <p>Powered by Azure OpenAI o1-mini model</p>
+        </footer>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
