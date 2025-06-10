@@ -1,10 +1,21 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (Manual)
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+      run_security_checks:
+        description: 'Run security checks'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   test:
@@ -52,9 +63,9 @@ jobs:
         file: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
-
   security:
     runs-on: ubuntu-latest
+    if: ${{ inputs.run_security_checks || true }}
     steps:
     - uses: actions/checkout@v4
     

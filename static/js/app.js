@@ -10,6 +10,7 @@ class BetterPromptApp {
         this.errorDiv = document.getElementById('error');
         this.submitBtn = document.getElementById('submitBtn');
         this.copyBtn = document.getElementById('copyBtn');
+        this.originalResultText = ''; // Store the original formatted text
         
         this.init();
     }
@@ -101,10 +102,14 @@ class BetterPromptApp {
             container.classList.toggle('loading', isLoading);
         }
     }
-    
-    showResult(improvedPrompt) {
+      showResult(improvedPrompt) {
+        // Store the original formatted text
+        this.originalResultText = improvedPrompt;
+        
         const resultText = document.getElementById('resultText');
         if (resultText) {
+            // Preserve line breaks and formatting when displaying
+            resultText.style.whiteSpace = 'pre-wrap';
             resultText.textContent = improvedPrompt;
         }
         
@@ -121,24 +126,25 @@ class BetterPromptApp {
             this.errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     }
-    
-    hideMessages() {
+      hideMessages() {
         if (this.resultDiv) {
             this.resultDiv.style.display = 'none';
         }
         if (this.errorDiv) {
             this.errorDiv.style.display = 'none';
         }
+        // Clear the stored original text when hiding messages
+        this.originalResultText = '';
     }
-    
-    async handleCopyClick() {
+      async handleCopyClick() {
         const resultText = document.getElementById('resultText');
         if (!resultText) {
             console.error('Result text element not found');
             return;
         }
         
-        const text = resultText.textContent;
+        // Use the stored original formatted text instead of textContent
+        const text = this.originalResultText || resultText.textContent;
         if (!text) {
             this.showError('No text to copy');
             return;
