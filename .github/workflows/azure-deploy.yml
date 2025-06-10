@@ -55,8 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/main'
-    
-    steps:
+      steps:
     - uses: actions/checkout@v4
     
     - name: Azure Login
@@ -66,17 +65,46 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
-    - name: Create container instance
+    - name: Setup deployment variables
       run: |
-        # Generate unique name for this deployment
+        # Use existing ACR
+        ACR_NAME="betterpromptacr"
+        ACR_LOGIN_SERVER="betterpromptacr.azurecr.io"
         CONTAINER_NAME="${{ env.AZURE_CONTAINER_NAME }}-${{ github.run_number }}"
         
+        echo "🏗️ Using existing Azure Container Registry: $ACR_NAME"
+        echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
+        echo "ACR_LOGIN_SERVER=$ACR_LOGIN_SERVER" >> $GITHUB_ENV
+        echo "CONTAINER_NAME=$CONTAINER_NAME" >> $GITHUB_ENV
+    
+    - name: Build and push Docker image
+      run: |
+        echo "🐳 Building Docker image for ACR: $ACR_LOGIN_SERVER"
+        
+        # Login to ACR
+        az acr login --name $ACR_NAME
+        
+        # Build and tag image
+        docker build -t $ACR_LOGIN_SERVER/betterprompt:latest .
+        
+        # Push to ACR
+        docker push $ACR_LOGIN_SERVER/betterprompt:latest
+        
+        echo "✅ Image pushed successfully!"
+    
+    - name: Create container instance
+      run: |
         echo "🚀 Creating Azure Container Instance: $CONTAINER_NAME"
-          # Create container instance directly from Docker Hub image
+        
+        # Get ACR credentials
+        ACR_USERNAME=$(az acr credential show --name $ACR_NAME --query username --output tsv)
+        ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query passwords[0].value --output tsv)
+        
+        # Create container instance from our custom image
         az container create \
           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
           --name $CONTAINER_NAME \
-          --image python:3.11-slim \
+          --image $ACR_LOGIN_SERVER/betterprompt:latest \
           --os-type Linux \
           --dns-name-label $CONTAINER_NAME \
           --ports 5000 \
@@ -84,7 +112,9 @@ jobs:
           --restart-policy OnFailure \
           --cpu 1 \
           --memory 1.5 \
-          --command-line "sh -c 'pip install flask openai python-dotenv requests && git clone https://github.com/01011011/betterprompt.git /app && cd /app && python app.py'" \
+          --registry-login-server $ACR_LOGIN_SERVER \
+          --registry-username $ACR_USERNAME \
+          --registry-password $ACR_PASSWORD \
           --environment-variables \
             AZURE_OPENAI_ENDPOINT=${{ secrets.AZURE_OPENAI_ENDPOINT }} \
             AZURE_OPENAI_API_KEY=${{ secrets.AZURE_OPENAI_API_KEY }} \
