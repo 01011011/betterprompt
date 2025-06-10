@@ -77,6 +77,36 @@ docker rm betterprompt-app
 
 ### Azure Container Instances
 
+#### Automated Deployment (Recommended)
+
+**🚀 GitHub Actions with OIDC Authentication**
+
+The repository includes automated deployment to Azure Container Instances using modern OpenID Connect (OIDC) federated identity:
+
+1. **Setup GitHub Secrets** (see [GITHUB_SECRETS.md](GITHUB_SECRETS.md))
+   ```
+   AZURE_CLIENT_ID: c7c3fceb-a5ae-457d-b9c5-c11bbafd7e22
+   AZURE_TENANT_ID: 16b3c013-d300-468d-ac64-7eda0820b6d3
+   AZURE_SUBSCRIPTION_ID: [your-subscription-id]
+   AZURE_RESOURCE_GROUP: betterprompt-rg
+   AZURE_OPENAI_ENDPOINT: [your-endpoint]
+   AZURE_OPENAI_API_KEY: [your-api-key]
+   ```
+
+2. **Automatic Deployment**: Push to `main` branch triggers:
+   - Unit tests
+   - OIDC authentication to Azure
+   - Container instance creation
+   - Health checks
+   - Cleanup of old deployments
+
+3. **Access Your App**: After deployment, your app will be available at:
+   `http://betterprompt-{run-number}.{region}.azurecontainer.io:5000`
+
+#### Manual Deployment
+
+If you prefer manual deployment or want to customize the process:
+
 1. **Build and push to Azure Container Registry**
    ```bash
    # Login to Azure

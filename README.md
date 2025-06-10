@@ -159,6 +159,45 @@ pytest --cov=app --cov-report=html
 
 ## 🚢 Deployment
 
+### 🤖 Automated Deployment (Recommended)
+
+**GitHub Actions with OIDC Authentication**
+
+This repository includes automated deployment to Azure Container Instances using modern OpenID Connect (OIDC) federated identity:
+
+1. **Setup GitHub Secrets** (see [GITHUB_SECRETS.md](GITHUB_SECRETS.md))
+   - Configure the required secrets in your GitHub repository
+   - Uses secure OIDC authentication (no long-lived secrets required)
+   - Already configured Azure AD application with proper permissions
+
+2. **Automatic Deployment**: Every push to `main` branch triggers:
+   - ✅ Unit tests
+   - 🔐 OIDC authentication to Azure
+   - 🚀 Container instance creation
+   - 🏥 Health checks
+   - 🧹 Cleanup of old deployments
+
+3. **Access Your App**: After deployment, your app will be available at:
+   `http://betterprompt-{run-number}.{region}.azurecontainer.io:5000`
+
+For detailed setup instructions, see [WORKFLOWS.md](WORKFLOWS.md).
+
+### 🔄 GitHub Actions Workflows
+
+The repository includes three automated workflows:
+
+1. **Quick Tests** (`quick-tests.yml`) - Runs on every push/PR
+   - Fast feedback with basic tests (~2-3 minutes)
+   - Python syntax checks and unit tests
+
+2. **Azure Deploy** (`azure-deploy.yml`) - Automated deployment
+   - Triggers on push to `main` branch
+   - OIDC authentication and container deployment
+
+3. **Full CI/CD Pipeline** (`ci.yml`) - Manual comprehensive testing
+   - Multi-Python version testing
+   - Security scans and code quality checks
+
 ### Docker Production Deployment
 
 1. **Build the production image**
