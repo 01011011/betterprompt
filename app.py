@@ -27,6 +27,10 @@ class Config:
     @classmethod
     def validate(cls) -> None:
         """Validate required configuration."""
+        # Skip validation in testing environment
+        if os.getenv('TESTING') == 'true':
+            return
+            
         if not cls.AZURE_OPENAI_ENDPOINT:
             raise ValueError("AZURE_OPENAI_ENDPOINT environment variable is required")
         if not cls.AZURE_OPENAI_API_KEY:

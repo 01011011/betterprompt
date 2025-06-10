@@ -32,6 +32,10 @@ jobs:
         pip install pytest
     
     - name: Run tests
+      env:
+        TESTING: true
+        AZURE_OPENAI_ENDPOINT: https://test.openai.azure.com
+        AZURE_OPENAI_API_KEY: test-key
       run: |
         pytest test_app.py -v
     

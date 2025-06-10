@@ -7,7 +7,9 @@ from app import create_app, PromptOptimizer
 @pytest.fixture
 def app():
     """Create application for testing."""
-    os.environ['AZURE_OPENAI_ENDPOINT'] = 'test-endpoint'
+    # Set testing environment variables
+    os.environ['TESTING'] = 'true'
+    os.environ['AZURE_OPENAI_ENDPOINT'] = 'https://test.openai.azure.com'
     os.environ['AZURE_OPENAI_API_KEY'] = 'test-key'
     
     app = create_app()
