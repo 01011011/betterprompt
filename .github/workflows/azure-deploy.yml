@@ -72,16 +72,18 @@ jobs:
         CONTAINER_NAME="${{ env.AZURE_CONTAINER_NAME }}-${{ github.run_number }}"
         
         echo "🚀 Creating Azure Container Instance: $CONTAINER_NAME"
-        
-        # Create container instance directly from Docker Hub image
+          # Create container instance directly from Docker Hub image
         az container create \
           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
           --name $CONTAINER_NAME \
           --image python:3.11-slim \
+          --os-type Linux \
           --dns-name-label $CONTAINER_NAME \
           --ports 5000 \
           --protocol TCP \
           --restart-policy OnFailure \
+          --cpu 1 \
+          --memory 1.5 \
           --command-line "sh -c 'pip install flask openai python-dotenv requests && git clone https://github.com/01011011/betterprompt.git /app && cd /app && python app.py'" \
           --environment-variables \
             AZURE_OPENAI_ENDPOINT=${{ secrets.AZURE_OPENAI_ENDPOINT }} \
