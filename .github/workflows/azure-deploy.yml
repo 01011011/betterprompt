@@ -72,14 +72,14 @@ jobs:
         ACR_LOGIN_SERVER="betterpromptacr.azurecr.io"
         CONTAINER_NAME="${{ env.AZURE_CONTAINER_NAME }}-${{ github.run_number }}"
         
-        echo "🏗️ Using existing Azure Container Registry: $ACR_NAME"
+        echo " Using existing Azure Container Registry: $ACR_NAME"
         echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
         echo "ACR_LOGIN_SERVER=$ACR_LOGIN_SERVER" >> $GITHUB_ENV
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> $GITHUB_ENV
     
     - name: Build and push Docker image
       run: |
-        echo "🐳 Building Docker image for ACR: $ACR_LOGIN_SERVER"
+        echo " Building Docker image for ACR: $ACR_LOGIN_SERVER"
         
         # Login to ACR
         az acr login --name $ACR_NAME
@@ -90,11 +90,11 @@ jobs:
         # Push to ACR
         docker push $ACR_LOGIN_SERVER/betterprompt:latest
         
-        echo "✅ Image pushed successfully!"
+        echo " Image pushed successfully!"
     
     - name: Create container instance
       run: |
-        echo "🚀 Creating Azure Container Instance: $CONTAINER_NAME"
+        echo " Creating Azure Container Instance: $CONTAINER_NAME"
         
         # Get ACR credentials
         ACR_USERNAME=$(az acr credential show --name $ACR_NAME --query username --output tsv)
@@ -121,7 +121,7 @@ jobs:
             FLASK_ENV=production \
             PORT=5000
         
-        echo "🎉 Container instance created successfully!"
+        echo " Container instance created successfully!"
         
         # Get the FQDN
         FQDN=$(az container show \
@@ -130,7 +130,7 @@ jobs:
           --query ipAddress.fqdn \
           --output tsv)
         
-        echo "🌐 Application URL: http://$FQDN:5000"
+        echo " Application URL: http://$FQDN:5000"
         echo "::notice title=Deployment Success::Application deployed to http://$FQDN:5000"
 
     - name: Health check
@@ -144,7 +144,7 @@ jobs:
           --query ipAddress.fqdn \
           --output tsv)
         
-        echo "🏥 Performing health check on http://$FQDN:5000"
+        echo " Performing health check on http://$FQDN:5000"
         
         # Wait for container to be ready
         sleep 30
@@ -152,17 +152,17 @@ jobs:
         # Check if the application is responding
         for i in {1..5}; do
           if curl -f -s "http://$FQDN:5000" > /dev/null; then
-            echo "✅ Health check passed!"
+            echo " Health check passed!"
             break
           else
-            echo "⏳ Attempt $i/5: Waiting for application to respond..."
+            echo " Attempt $i/5: Waiting for application to respond..."
             sleep 15
           fi
         done
 
     - name: Cleanup old deployments
       run: |
-        echo "🧹 Cleaning up old deployments..."
+        echo " Cleaning up old deployments..."
         
         # Get all container instances starting with our app name
         CONTAINERS=$(az container list \
@@ -181,7 +181,7 @@ jobs:
             
             # Delete if more than 3 deployments old
             if [ $((CURRENT_RUN_NUM - RUN_NUM)) -gt 2 ]; then
-              echo "🗑️ Deleting old container: $container"
+              echo " Deleting old container: $container"
               az container delete \
                 --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
                 --name $container \
@@ -190,4 +190,4 @@ jobs:
           fi
         done
         
-        echo "✅ Cleanup completed!"
+        echo " Cleanup completed!"
