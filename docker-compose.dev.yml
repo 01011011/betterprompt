@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # Main Flask Application
+  app:
+    build: .
+    container_name: betterprompt-app
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=true
+      - DATABASE_URL=postgresql://betterprompt_user:betterprompt_pass@db:5432/betterprompt_dev
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/__pycache__  # Exclude pycache from volume mount
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - betterprompt-network
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: betterprompt-postgres
+    environment:
+      POSTGRES_DB: betterprompt_dev
+      POSTGRES_USER: betterprompt_user
+      POSTGRES_PASSWORD: betterprompt_pass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U betterprompt_user -d betterprompt_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - betterprompt-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: betterprompt-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - betterprompt-network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # Database Admin Tool (for development)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: betterprompt-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@betterprompt.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - betterprompt-network
+    profiles:
+      - dev-tools
+
+  # Redis Commander (for development)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: betterprompt-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - betterprompt-network
+    profiles:
+      - dev-tools
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  betterprompt-network:
+    driver: bridge
